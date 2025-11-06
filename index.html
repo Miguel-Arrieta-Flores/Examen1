@@ -288,6 +288,7 @@
     let q1 = 0, q2 = Math.PI / 2;
     let pathPoints = [];
     let animating = false;
+    const RAD_TO_DEG = 180 / Math.PI;
 
     /* Alerta personalizada */
     function mostrarAlerta(x, y, maxReach) {
@@ -370,20 +371,24 @@
     }
 
     function drawRobot(q1v, q2v) {
-      drawGrid();
-      drawPath();
-      const fk = forwardKinematics(q1v, q2v);
-      const O = toCanvas({ x: 0, y: 0 }), P1 = toCanvas({ x: fk.x1, y: fk.y1 });
-      const P2 = toCanvas({ x: fk.x2, y: fk.y2 }), TCP = toCanvas({ x: fk.xt, y: fk.yt });
-      ctx.lineWidth = 6; ctx.strokeStyle = '#3a7bd5'; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(P1.x, P1.y); ctx.stroke();
-      ctx.strokeStyle = '#3fa47a'; ctx.beginPath(); ctx.moveTo(P1.x, P1.y); ctx.lineTo(P2.x, P2.y); ctx.stroke();
-      ctx.lineWidth = 4; ctx.strokeStyle = '#ff7b00'; ctx.beginPath(); ctx.moveTo(P2.x, P2.y); ctx.lineTo(TCP.x, TCP.y); ctx.stroke();
-      ctx.fillStyle = '#111'; [O, P1, P2, TCP].forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI); ctx.fill(); });
-      const statusEl = document.getElementById("status");
-      if (statusEl) {
-        statusEl.textContent = `q₁ = ${q1v.toFixed(3)} rad | q₂ = ${q2v.toFixed(3)} rad | X = ${fk.xt.toFixed(3)} m | Y = ${fk.yt.toFixed(3)} m`;
-      }
-    }
+      drawGrid();
+      drawPath();
+      const fk = forwardKinematics(q1v, q2v);
+      const O = toCanvas({ x: 0, y: 0 }), P1 = toCanvas({ x: fk.x1, y: fk.y1 });
+      const P2 = toCanvas({ x: fk.x2, y: fk.y2 }), TCP = toCanvas({ x: fk.xt, y: fk.yt });
+      ctx.lineWidth = 6; ctx.strokeStyle = '#3a7bd5'; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(P1.x, P1.y); ctx.stroke();
+      ctx.strokeStyle = '#3fa47a'; ctx.beginPath(); ctx.moveTo(P1.x, P1.y); ctx.lineTo(P2.x, P2.y); ctx.stroke();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#ff7b00'; ctx.beginPath(); ctx.moveTo(P2.x, P2.y); ctx.lineTo(TCP.x, TCP.y); ctx.stroke();
+      ctx.fillStyle = '#111'; [O, P1, P2, TCP].forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI); ctx.fill(); });
+      
+      // MODIFICACIÓN: Mostrar valores en grados en la barra de estado
+      const statusEl = document.getElementById("status");
+      if (statusEl) {
+          const q1deg = q1v * RAD_TO_DEG; // <<< CONVERSIÓN
+          const q2deg = q2v * RAD_TO_DEG; // <<< CONVERSIÓN
+          statusEl.textContent = `q₁ = ${q1deg.toFixed(2)}° | q₂ = ${q2deg.toFixed(2)}° | X = ${fk.xt.toFixed(3)} m | Y = ${fk.yt.toFixed(3)} m`; // <<< UNIDADES ACTUALIZADAS
+      }
+    }
 
     /* Trayectorias (quintic) */
     function getQuinticCoeffs(q0, qf, T) {
@@ -397,27 +402,31 @@
 
     /* Charts */
     const q1Chart = new Chart(document.getElementById('chartQ1'), {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: 'q₁ (rad)', data: [], borderColor: '#3a7bd5', fill: false }]},
-      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: 'rad' } } } }
-    });
-    const q2Chart = new Chart(document.getElementById('chartQ2'), {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: 'q₂ (rad)', data: [], borderColor: '#3fa47a', fill: false }]},
-      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: 'rad' } } } }
-    });
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'q₁ (°)', data: [], borderColor: '#3a7bd5', fill: false }]}, // Etiqueta en grados
+      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: '°' } } } } // Eje Y en grados
+    });
+    const q2Chart = new Chart(document.getElementById('chartQ2'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'q₂ (°)', data: [], borderColor: '#3fa47a', fill: false }]}, // Etiqueta en grados
+      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: '°' } } } } // Eje Y en grados
+    });
     function chartsReset() {
       q1Chart.data.labels = []; q1Chart.data.datasets[0].data = [];
       q2Chart.data.labels = []; q2Chart.data.datasets[0].data = [];
       q1Chart.update(); q2Chart.update();
     }
-    function chartsPush(t, q1v, q2v) {
-      q1Chart.data.labels.push(t.toFixed(2));
-      q1Chart.data.datasets[0].data.push(q1v);
-      q2Chart.data.labels.push(t.toFixed(2));
-      q2Chart.data.datasets[0].data.push(q2v);
-      q1Chart.update(); q2Chart.update();
-    }
+    function chartsPush(t, q1v_rad, q2v_rad) {
+      // MODIFICACIÓN: Convertir radianes a grados antes de graficar
+      const q1v_deg = q1v_rad * RAD_TO_DEG; // <<< CONVERSIÓN
+      const q2v_deg = q2v_rad * RAD_TO_DEG; // <<< CONVERSIÓN
+
+      q1Chart.data.labels.push(t.toFixed(2));
+      q1Chart.data.datasets[0].data.push(q1v_deg); // Valores en grados
+      q2Chart.data.labels.push(t.toFixed(2));
+      q2Chart.data.datasets[0].data.push(q2v_deg); // Valores en grados
+      q1Chart.update(); q2Chart.update();
+    }
 
     /* Movimiento animado */
     function moveArticularTo(xd, yd, duration_s) {
