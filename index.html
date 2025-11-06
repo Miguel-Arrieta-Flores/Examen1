@@ -1,290 +1,648 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Robot Planar 2 GDL — Movimiento Articular Natural</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-:root {
-  --bg: #f4f6fb;
-  --primary: #007bff;
-  --green: #28a745;
-  --orange: #ff7b00;
-  --gray: #555;
-  --border: #ccd4e0;
-  --card: #ffffff;
-}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Robot Planar 2 GDL — Movimiento Instantáneo y Trayectorias</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --primary: #007bff;
+      --green: #28a745;
+      --orange: #ff7b00;
+      --gray: #555;
+      --border: #ccd4e0;
+      --card: #ffffff;
+    }
 
-body {
-  font-family: "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  margin: 0;
-  color: var(--gray);
-  text-align: center;
-}
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      color: var(--gray);
+      text-align: center;
+    }
 
-header {
-  background: var(--primary);
-  color: white;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
 
-main {
-  max-width: 1200px;
-  margin: 20px auto;
-  background: var(--card);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
+    main {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
 
-section {
-  margin-bottom: 30px;
-}
+    section { margin-bottom: 30px; }
+    h2, h3 { color: var(--primary); }
 
-h2, h3 {
-  color: var(--primary);
-}
+    #robotCanvas {
+      width: 800px;
+      height: 800px;
+      max-width: 100%;
+      border: 2px solid var(--border);
+      background: white;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto 15px;
+    }
 
-#robotCanvas {
-  width: 800px;
-  height: 800px;
-  max-width: 100%;
-  border: 2px solid var(--border);
-  background: white;
-  border-radius: 10px;
-  display: block;
-  margin: 0 auto 15px;
-}
+    .input-group {
+      margin: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-.input-group {
-  margin: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
+    input[type=range] { width: 250px; }
+    input[type=number], select {
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
 
-input[type=range] {
-  width: 250px;
-}
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      background: var(--green);
+      margin: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #218838; }
+    .btn-secondary { background: var(--primary); }
+    .btn-danger { background: #dc3545; }
+    .btn-orange { background: var(--orange); }
 
-input[type=number], select {
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
+    #status {
+      font-size: 15px;
+      margin-top: 10px;
+      color: #333;
+    }
 
-button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  background: var(--green);
-  margin: 5px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-button:hover {
-  background: #218838;
-}
+    .chart-container {
+      width: 90%;
+      max-width: 900px;
+      margin: 20px auto;
+    }
 
-.btn-secondary {
-  background: var(--primary);
-}
-.btn-danger {
-  background: #dc3545;
-}
+    /* Modal control */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      padding-top: 60px;
+    }
 
-#status {
-  font-size: 15px;
-  margin-top: 10px;
-  color: #333;
-}
+    .modal-content {
+      background-color: var(--card);
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid var(--border);
+      width: 80%;
+      max-width: 600px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
 
-.chart-container {
-  width: 90%;
-  max-width: 900px;
-  margin: 20px auto;
-}
-</style>
+    .close-btn {
+      color: var(--gray);
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      cursor: pointer;
+    }
+    .close-btn:hover, .close-btn:focus {
+      color: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    #openModalBtn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 11;
+      padding: 10px 15px;
+      background: var(--orange);
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+    #openModalBtn:hover { background: #cc6300; }
+    #controlSection { display: none; }
+
+    /* Alert personalizada */
+    #alerta {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .alerta-contenido {
+      background: white;
+      padding: 1.5rem 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      text-align: center;
+      max-width: 360px;
+    }
+
+    .alerta-contenido h3 { margin-top: 0; color: #d9534f; }
+    .alerta-contenido button {
+      margin-top: 1rem;
+      background: #d9534f;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .alerta-contenido button:hover { background: #c9302c; }
+  </style>
 </head>
 <body>
 
-<header>
-  <h1>Robot Planar 2 GDL — Movimiento Articular Natural</h1>
-  <p>Simulación con control cinemático, modo de codo y visualización en tiempo real</p>
-</header>
+  <header>
+    <h1>Robot Planar 2 GDL — Movimiento Instantáneo y Trayectorias</h1>
+    <p>Simulación con control cinemático instantáneo y gráficas precalculadas (T<sub>f</sub> = 20 s)</p>
+  </header>
 
-<main>
-  <section>
-    <h2>Panel de Control</h2>
-    <div class="input-group">
-      <label>Xd (m):</label>
-      <input type="range" id="sliderX" min="-0.26" max="0.26" step="0.001" value="0.14">
-      <input type="number" id="xd" min="-0.26" max="0.26" step="0.001" value="0.14">
+  <button id="openModalBtn" class="btn-secondary" aria-haspopup="dialog" aria-controls="modalControl">⚙️ Abrir Panel de Control</button>
+
+  <main>
+    <section id="controlSection" aria-hidden="true"><h2>Panel de Control</h2></section>
+
+    <section>
+      <h2>Visualización del Robot</h2>
+      <canvas id="robotCanvas" width="800" height="800" aria-label="Visualización del robot"></canvas>
+      <div id="status" role="status">q₁ = 0.140 rad | q₂ = 1.391 rad | X = 0.140 m | Y = 0.140 m</div>
+    </section>
+
+    <section>
+      <h2>Gráficas de Movimiento</h2>
+      <div class="chart-container"><canvas id="chartQ1" aria-label="Gráfica q1"></canvas></div>
+      <div class="chart-container"><canvas id="chartQ2" aria-label="Gráfica q2"></canvas></div>
+    </section>
+  </main>
+
+  <div id="modalControl" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close-btn" title="Cerrar" role="button" aria-label="Cerrar panel">&times;</span>
+      <h2>Panel de Control</h2>
+
+      <div class="input-group">
+        <label for="sliderX">Xd (m):</label>
+        <input type="range" id="sliderX" min="-0.26" max="0.26" step="0.001" value="0.14">
+        <input type="number" id="xd" min="-0.26" max="0.26" step="0.001" value="0.14" aria-label="Xd numérico">
+      </div>
+
+      <div class="input-group">
+        <label for="sliderY">Yd (m):</label>
+        <input type="range" id="sliderY" min="-0.26" max="0.26" step="0.001" value="0.14">
+        <input type="number" id="yd" min="-0.26" max="0.26" step="0.001" value="0.14" aria-label="Yd numérico">
+      </div>
+
+      <div class="input-group">
+        <label for="dur">Duración (s):</label>
+        <input type="range" id="dur" min="0.5" max="20" step="0.1" value="20">
+        <input type="number" id="durNum" min="0.5" max="20" step="0.1" value="20" aria-label="Duración numérica">
+      </div>
+
+      <div class="input-group">
+        <label for="elbowMode">Configuración:</label>
+        <select id="elbowMode" aria-label="Modo de codo">
+          <option value="auto" selected>Automático</option>
+          <option value="up">Codo arriba</option>
+          <option value="down">Codo abajo</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px">
+        <button id="moverBtn">Mover TCP (Animado)</button>
+        <button id="moverInstantBtn" class="btn-orange">Mover TCP (Instantáneo)</button>
+        <button id="inicialBtn" class="btn-secondary">Posición Inicial</button>
+        <button id="clearBtn" class="btn-danger">Limpiar Trayectoria</button>
+      </div>
     </div>
-    <div class="input-group">
-      <label>Yd (m):</label>
-      <input type="range" id="sliderY" min="-0.26" max="0.26" step="0.001" value="0.14">
-      <input type="number" id="yd" min="-0.26" max="0.26" step="0.001" value="0.14">
+  </div>
+
+  <div id="alerta" role="alertdialog" aria-modal="true" aria-hidden="true">
+    <div class="alerta-contenido">
+      <h3>⚠️ Punto fuera de alcance</h3>
+      <p id="mensajeAlerta">El punto (X, Y) está fuera del alcance del robot.</p>
+      <button id="alertCloseBtn">Aceptar</button>
     </div>
-    <div class="input-group">
-      <label>Duración (s):</label>
-      <input type="range" id="dur" min="0.5" max="20" step="0.1" value="6">
-      <input type="number" id="durNum" min="0.5" max="20" step="0.1" value="6">
-    </div>
-    <div class="input-group">
-      <label>Configuración:</label>
-      <select id="elbowMode">
-        <option value="auto" selected>Automático</option>
-        <option value="up">Codo arriba</option>
-        <option value="down">Codo abajo</option>
-      </select>
-    </div>
-    <div>
-      <button id="moverBtn">Mover TCP</button>
-      <button id="inicialBtn" class="btn-secondary">Posición Inicial</button>
-      <button id="clearBtn" class="btn-danger">Limpiar Trayectoria</button>
-    </div>
-  </section>
+  </div>
 
-  <section>
-    <h2>Visualización del Robot</h2>
-    <canvas id="robotCanvas" width="800" height="800"></canvas>
-    <div id="status">q₁ = 0.000 rad | q₂ = 1.571 rad | X = 0.140 m | Y = 0.140 m</div>
-  </section>
+  <footer style="
+    background: var(--primary);
+    color: white;
+    text-align: center;
+    padding: 15px 10px;
+    margin-top: 40px;
+    border-top: 3px solid var(--orange);
+    font-size: 14px;
+  ">
+    © 2025 Simulador Robot Planar 2 GDL — Desarrollado por Miguel Angel Arrieta Flores<br>
+    <span style="opacity: 0.8;">ROBOTICA • GRUPO 1010 • EXAMEN 1 • FES ARAGON • SEMESTRE 2026-I</span>
+  </footer>
 
-  <section>
-    <h2>Gráficas de Movimiento</h2>
-    <div class="chart-container"><canvas id="chartQ1"></canvas></div>
-    <div class="chart-container"><canvas id="chartQ2"></canvas></div>
-  </section>
-</main>
 
-<script>
-/* === Parámetros principales === */
-const L1=0.12,L2=0.12,TOOL=0.02,L2E=L2+TOOL,SCALE=1000;
-const L_REACH=L1+L2E;
-const canvas=document.getElementById('robotCanvas'),ctx=canvas.getContext('2d');
-const center={x:canvas.width/2,y:canvas.height/2};
-let q1=0,q2=Math.PI/2,pathPoints=[],animating=false;
+  <script>
+    /* Parámetros principales */
+    const L1 = 0.12, L2 = 0.12, TOOL = 0.02, L2E = L2 + TOOL, SCALE = 1000;
+    const L_REACH = L1 + L2E;
+    const FIXED_GRAPH_DURATION = 20;
 
-/* === Utilidades matemáticas === */
-function wrapToPi(a){a=((a+Math.PI)%(2*Math.PI));if(a<0)a+=2*Math.PI;return a-Math.PI;}
-function angleDiff(a,b){let d=wrapToPi(b-a);return d;}
-function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+    /* Canvas y estado */
+    const canvas = document.getElementById('robotCanvas');
+    const ctx = canvas.getContext('2d');
+    const center = { x: canvas.width / 2, y: canvas.height / 2 };
 
-/* === Cinemática === */
-function forwardKinematics(q1v,q2v){
-  const x1=L1*Math.cos(q1v),y1=L1*Math.sin(q1v);
-  const x2=x1+L2*Math.cos(q1v+q2v),y2=y1+L2*Math.sin(q1v+q2v);
-  const xt=x1+L2E*Math.cos(q1v+q2v),yt=y1+L2E*Math.sin(q1v+q2v);
-  return{x1,y1,x2,y2,xt,yt};
-}
-function inverseKinematicsAll(x,y){
-  const r2=x*x+y*y,denom=2*L1*L2E,epsilon=1e-9;
-  const cosQ2=(r2-L1*L1-L2E*L2E)/(denom);
-  if(cosQ2<-1-epsilon||cosQ2>1+epsilon)return null;
-  const q2a=Math.acos(clamp(cosQ2,-1,1)),q2b=-q2a;
-  const q1a=Math.atan2(y,x)-Math.atan2(L2E*Math.sin(q2a),L1+L2E*Math.cos(q2a));
-  const q1b=Math.atan2(y,x)-Math.atan2(L2E*Math.sin(q2b),L1+L2E*Math.cos(q2b));
-  return[{q1:wrapToPi(q1a),q2:wrapToPi(q2a)},{q1:wrapToPi(q1b),q2:wrapToPi(q2b)}];
-}
+    let q1 = 0, q2 = Math.PI / 2;
+    let pathPoints = [];
+    let animating = false;
 
-/* === Dibujo === */
-function toCanvas(p){return{x:center.x+p.x*SCALE,y:center.y-p.y*SCALE};}
-function drawGrid(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle='#e5e9f0';ctx.lineWidth=1;
-  for(let g=-0.4;g<=0.4;g+=0.02){
-    const vx=center.x+g*SCALE,vy=center.y-g*SCALE;
-    ctx.beginPath();ctx.moveTo(vx,0);ctx.lineTo(vx,canvas.height);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(0,vy);ctx.lineTo(canvas.width,vy);ctx.stroke();
-  }
-  ctx.strokeStyle='#333';ctx.lineWidth=1.3;
-  ctx.beginPath();ctx.moveTo(center.x,0);ctx.lineTo(center.x,canvas.height);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(0,center.y);ctx.lineTo(canvas.width,center.y);ctx.stroke();
-  ctx.beginPath();ctx.strokeStyle='rgba(0,0,0,.15)';ctx.arc(center.x,center.y,L_REACH*SCALE,0,2*Math.PI);ctx.stroke();
-}
-function drawPath(){
-  if(pathPoints.length<2)return;
-  ctx.beginPath();ctx.strokeStyle='rgba(255,0,0,0.6)';
-  ctx.setLineDash([5,5]);ctx.lineWidth=2;
-  let c0=toCanvas(pathPoints[0]);ctx.moveTo(c0.x,c0.y);
-  for(let i=1;i<pathPoints.length;i++){
-    let p=toCanvas(pathPoints[i]);ctx.lineTo(p.x,p.y);
-  }
-  ctx.stroke();ctx.setLineDash([]);
-}
-function drawRobot(q1v,q2v){
-  drawGrid();drawPath();
-  const fk=forwardKinematics(q1v,q2v);
-  const O=toCanvas({x:0,y:0}),P1=toCanvas({x:fk.x1,y:fk.y1});
-  const P2=toCanvas({x:fk.x2,y:fk.y2}),TCP=toCanvas({x:fk.xt,y:fk.yt});
-  ctx.lineWidth=6;ctx.strokeStyle='#3a7bd5';ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(P1.x,P1.y);ctx.stroke();
-  ctx.strokeStyle='#3fa47a';ctx.beginPath();ctx.moveTo(P1.x,P1.y);ctx.lineTo(P2.x,P2.y);ctx.stroke();
-  ctx.lineWidth=4;ctx.strokeStyle='#ff7b00';ctx.beginPath();ctx.moveTo(P2.x,P2.y);ctx.lineTo(TCP.x,TCP.y);ctx.stroke();
-  ctx.fillStyle='#111';[O,P1,P2,TCP].forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,5,0,2*Math.PI);ctx.fill();});
-  document.getElementById("status").innerText = 
-    `q₁ = ${q1v.toFixed(3)} rad | q₂ = ${q2v.toFixed(3)} rad | X = ${fk.xt.toFixed(3)} m | Y = ${fk.yt.toFixed(3)} m`;
-}
+    /* Alerta personalizada */
+    function mostrarAlerta(x, y, maxReach) {
+      const mensaje = `El punto (${x.toFixed(3)} m, ${y.toFixed(3)} m) está fuera del alcance, ingresa otro punto.`;
+      const alerta = document.getElementById('alerta');
+      const msgEl = document.getElementById('mensajeAlerta');
+      msgEl.textContent = mensaje;
+      alerta.style.display = 'flex';
+      alerta.setAttribute('aria-hidden', 'false');
+    }
+    function cerrarAlerta() {
+      const alerta = document.getElementById('alerta');
+      alerta.style.display = 'none';
+      alerta.setAttribute('aria-hidden', 'true');
+    }
+    // Cerrar con el botón
+    document.getElementById('alertCloseBtn').addEventListener('click', cerrarAlerta);
+    // Cerrar al hacer click fuera del contenido de alerta
+    document.getElementById('alerta').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('alerta')) cerrarAlerta();
+    });
 
-/* === Trayectorias === */
-function getQuinticCoeffs(q0,qf,T){
-  const dq=qf-q0;
-  return[q0,0,0,10*dq/(T**3),-15*dq/(T**4),6*dq/(T**5)];
-}
-function evalQuintic(c,t){const[a0,a1,a2,a3,a4,a5]=c;return a0+a1*t+a2*t*t+a3*t**3+a4*t**4+a5*t**5;}
+    /* Utilidades */
+    function wrapToPi(a) {
+      a = ((a + Math.PI) % (2 * Math.PI));
+      if (a < 0) a += 2 * Math.PI;
+      return a - Math.PI;
+    }
+    function angleDiff(a, b) { return wrapToPi(b - a); }
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-/* === Gráficas === */
-const q1Chart=new Chart(document.getElementById('chartQ1'),{
-  type:'line',
-  data:{labels:[],datasets:[{label:'q₁ (rad)',data:[],borderColor:'#3a7bd5',fill:false}]},
-  options:{animation:false,scales:{x:{title:{display:true,text:'t (s)'}},y:{title:{display:true,text:'rad'}}}}
-});
-const q2Chart=new Chart(document.getElementById('chartQ2'),{
-  type:'line',
-  data:{labels:[],datasets:[{label:'q₂ (rad)',data:[],borderColor:'#3fa47a',fill:false}]},
-  options:{animation:false,scales:{x:{title:{display:true,text:'t (s)'}},y:{title:{display:true,text:'rad'}}}}
-});
-function chartsReset(){q1Chart.data.labels=[];q1Chart.data.datasets[0].data=[];q2Chart.data.labels=[];q2Chart.data.datasets[0].data=[];q1Chart.update();q2Chart.update();}
-function chartsPush(t,q1v,q2v){q1Chart.data.labels.push(t.toFixed(2));q1Chart.data.datasets[0].data.push(q1v);q2Chart.data.labels.push(t.toFixed(2));q2Chart.data.datasets[0].data.push(q2v);q1Chart.update();q2Chart.update();}
+    /* Cinemática */
+    function forwardKinematics(q1v, q2v) {
+      const x1 = L1 * Math.cos(q1v), y1 = L1 * Math.sin(q1v);
+      const x2 = x1 + L2 * Math.cos(q1v + q2v), y2 = y1 + L2 * Math.sin(q1v + q2v);
+      const xt = x1 + L2E * Math.cos(q1v + q2v), yt = y1 + L2E * Math.sin(q1v + q2v);
+      return { x1, y1, x2, y2, xt, yt };
+    }
 
-/* === Movimiento === */
-function moveArticularTo(xd,yd,T){
-  if(animating)return;
-  if(Math.hypot(xd,yd)>L_REACH+1e-6){alert('Punto fuera del alcance.');return;}
-  const sols=inverseKinematicsAll(xd,yd);
-  if(!sols)return alert('Sin solución IK.');
-  const mode=document.getElementById('elbowMode').value;
-  let target=mode==='up'?sols[1]:mode==='down'?sols[0]:sols.reduce((a,b)=>Math.abs(angleDiff(b.q1,q1))+Math.abs(angleDiff(b.q2,q2))<Math.abs(angleDiff(a.q1,q1))+Math.abs(angleDiff(a.q2,q2))?b:a);
-  const c1=getQuinticCoeffs(q1,target.q1,T),c2=getQuinticCoeffs(q2,target.q2,T);
-  chartsReset();pathPoints=[];animating=true;
-  const t0=performance.now();
-  function step(now){
-    const t=(now-t0)/1000;const tt=clamp(t,0,T);
-    q1=wrapToPi(evalQuintic(c1,tt));q2=wrapToPi(evalQuintic(c2,tt));
-    const fk=forwardKinematics(q1,q2);
-    pathPoints.push({x:fk.xt,y:fk.yt});
-    drawRobot(q1,q2);chartsPush(tt,q1,q2);
-    if(t<T){requestAnimationFrame(step);}else{animating=false;drawRobot(q1,q2);}
-  }
-  requestAnimationFrame(step);
-}
+    function inverseKinematicsAll(x, y) {
+      const r2 = x * x + y * y;
+      const denom = 2 * L1 * L2E;
+      const cosQ2 = (r2 - L1 * L1 - L2E * L2E) / denom;
+      const eps = 1e-9;
+      if (cosQ2 < -1 - eps || cosQ2 > 1 + eps) return null;
+      const acosV = Math.acos(clamp(cosQ2, -1, 1));
+      const q2a = acosV, q2b = -acosV;
+      const q1a = Math.atan2(y, x) - Math.atan2(L2E * Math.sin(q2a), L1 + L2E * Math.cos(q2a));
+      const q1b = Math.atan2(y, x) - Math.atan2(L2E * Math.sin(q2b), L1 + L2E * Math.cos(q2b));
+      return [{ q1: wrapToPi(q1a), q2: wrapToPi(q2a) }, { q1: wrapToPi(q1b), q2: wrapToPi(q2b) }];
+    }
 
-/* === Interfaz === */
-function bind(a,b){a.addEventListener('input',()=>b.value=a.value);b.addEventListener('input',()=>a.value=b.value);}
-const sliderX=document.getElementById('sliderX'),inputX=document.getElementById('xd');
-const sliderY=document.getElementById('sliderY'),inputY=document.getElementById('yd');
-const dur=document.getElementById('dur'),durNum=document.getElementById('durNum');
-bind(sliderX,inputX);bind(sliderY,inputY);bind(dur,durNum);
-moverBtn.onclick=()=>moveArticularTo(parseFloat(xd.value),parseFloat(yd.value),parseFloat(dur.value));
-inicialBtn.onclick=()=>moveArticularTo(0.14,0.14,parseFloat(dur.value));
-clearBtn.onclick=()=>{q1=0;q2=Math.PI/2;pathPoints=[];chartsReset();drawRobot(q1,q2);}
-drawRobot(q1,q2);
-</script>
+    /* Dibujo */
+    function toCanvas(pt) { return { x: center.x + pt.x * SCALE, y: center.y - pt.y * SCALE }; }
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#e5e9f0'; ctx.lineWidth = 1;
+      for (let g = -0.4; g <= 0.4; g += 0.02) {
+        const vx = center.x + g * SCALE;
+        const vy = center.y - g * SCALE;
+        ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, vy); ctx.lineTo(canvas.width, vy); ctx.stroke();
+      }
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(center.x, 0); ctx.lineTo(center.x, canvas.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, center.y); ctx.lineTo(canvas.width, center.y); ctx.stroke();
+      ctx.beginPath(); ctx.strokeStyle = 'rgba(0,0,0,.15)'; ctx.arc(center.x, center.y, L_REACH * SCALE, 0, 2 * Math.PI); ctx.stroke();
+    }
+
+    function drawPath() {
+      if (pathPoints.length < 2) return;
+      ctx.beginPath(); ctx.strokeStyle = 'rgba(255,0,0,0.6)';
+      ctx.setLineDash([5, 5]); ctx.lineWidth = 2;
+      const c0 = toCanvas(pathPoints[0]); ctx.moveTo(c0.x, c0.y);
+      for (let i = 1; i < pathPoints.length; i++) {
+        const p = toCanvas(pathPoints[i]); ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    function drawRobot(q1v, q2v) {
+      drawGrid();
+      drawPath();
+      const fk = forwardKinematics(q1v, q2v);
+      const O = toCanvas({ x: 0, y: 0 }), P1 = toCanvas({ x: fk.x1, y: fk.y1 });
+      const P2 = toCanvas({ x: fk.x2, y: fk.y2 }), TCP = toCanvas({ x: fk.xt, y: fk.yt });
+      ctx.lineWidth = 6; ctx.strokeStyle = '#3a7bd5'; ctx.beginPath(); ctx.moveTo(O.x, O.y); ctx.lineTo(P1.x, P1.y); ctx.stroke();
+      ctx.strokeStyle = '#3fa47a'; ctx.beginPath(); ctx.moveTo(P1.x, P1.y); ctx.lineTo(P2.x, P2.y); ctx.stroke();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#ff7b00'; ctx.beginPath(); ctx.moveTo(P2.x, P2.y); ctx.lineTo(TCP.x, TCP.y); ctx.stroke();
+      ctx.fillStyle = '#111'; [O, P1, P2, TCP].forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI); ctx.fill(); });
+      const statusEl = document.getElementById("status");
+      if (statusEl) {
+        statusEl.textContent = `q₁ = ${q1v.toFixed(3)} rad | q₂ = ${q2v.toFixed(3)} rad | X = ${fk.xt.toFixed(3)} m | Y = ${fk.yt.toFixed(3)} m`;
+      }
+    }
+
+    /* Trayectorias (quintic) */
+    function getQuinticCoeffs(q0, qf, T) {
+      const dq = qf - q0;
+      return [q0, 0, 0, 10 * dq / (T ** 3), -15 * dq / (T ** 4), 6 * dq / (T ** 5)];
+    }
+    function evalQuintic(coeffs, t) {
+      const [a0, a1, a2, a3, a4, a5] = coeffs;
+      return a0 + a1 * t + a2 * t * t + a3 * t ** 3 + a4 * t ** 4 + a5 * t ** 5;
+    }
+
+    /* Charts */
+    const q1Chart = new Chart(document.getElementById('chartQ1'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'q₁ (rad)', data: [], borderColor: '#3a7bd5', fill: false }]},
+      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: 'rad' } } } }
+    });
+    const q2Chart = new Chart(document.getElementById('chartQ2'), {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'q₂ (rad)', data: [], borderColor: '#3fa47a', fill: false }]},
+      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: 'rad' } } } }
+    });
+    function chartsReset() {
+      q1Chart.data.labels = []; q1Chart.data.datasets[0].data = [];
+      q2Chart.data.labels = []; q2Chart.data.datasets[0].data = [];
+      q1Chart.update(); q2Chart.update();
+    }
+    function chartsPush(t, q1v, q2v) {
+      q1Chart.data.labels.push(t.toFixed(2));
+      q1Chart.data.datasets[0].data.push(q1v);
+      q2Chart.data.labels.push(t.toFixed(2));
+      q2Chart.data.datasets[0].data.push(q2v);
+      q1Chart.update(); q2Chart.update();
+    }
+
+    /* Movimiento animado */
+    function moveArticularTo(xd, yd, duration_s) {
+      if (animating) return;
+      if (Math.hypot(xd, yd) > L_REACH + 1e-6) { mostrarAlerta(xd, yd, L_REACH); return; }
+
+      const sols = inverseKinematicsAll(xd, yd);
+      if (!sols) { mostrarAlerta(xd, yd, L_REACH); return; }
+
+      const mode = document.getElementById('elbowMode').value;
+      let target;
+      if (mode === 'up') target = sols[1];
+      else if (mode === 'down') target = sols[0];
+      else {
+        let best = sols[0];
+        let bestDist = Math.abs(angleDiff(q1, sols[0].q1)) + Math.abs(angleDiff(q2, sols[0].q2));
+        for (let i = 1; i < sols.length; i++) {
+          const s = sols[i];
+          const d = Math.abs(angleDiff(q1, s.q1)) + Math.abs(angleDiff(q2, s.q2));
+          if (d < bestDist) { bestDist = d; best = s; }
+        }
+        target = best;
+      }
+
+      const T = Math.max(0.01, parseFloat(duration_s));
+      const coeffs1 = getQuinticCoeffs(q1, target.q1, T);
+      const coeffs2 = getQuinticCoeffs(q2, target.q2, T);
+
+      chartsReset();
+      pathPoints = [];
+      animating = true;
+      const tStart = performance.now();
+
+      function step(now) {
+        const elapsed = (now - tStart) / 1000;
+        const tt = clamp(elapsed, 0, T);
+        const q1t = evalQuintic(coeffs1, tt);
+        const q2t = evalQuintic(coeffs2, tt);
+        q1 = wrapToPi(q1t);
+        q2 = wrapToPi(q2t);
+
+        const fk = forwardKinematics(q1, q2);
+        pathPoints.push({ x: fk.xt, y: fk.yt });
+
+        drawRobot(q1, q2);
+        chartsPush(tt, q1, q2);
+
+        if (elapsed < T) requestAnimationFrame(step);
+        else {
+          animating = false;
+          q1 = target.q1; q2 = target.q2;
+          drawRobot(q1, q2);
+          chartsPush(T, q1, q2);
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* Movimiento instantáneo */
+    function calculateAndMoveInstant(xd, yd) {
+      if (animating) return;
+      if (Math.hypot(xd, yd) > L_REACH + 1e-6) { mostrarAlerta(xd, yd, L_REACH); return; }
+
+      const sols = inverseKinematicsAll(xd, yd);
+      if (!sols) { mostrarAlerta(xd, yd, L_REACH); return; }
+
+      const mode = document.getElementById('elbowMode').value;
+      let target;
+      if (mode === 'up') target = sols[1];
+      else if (mode === 'down') target = sols[0];
+      else {
+        let best = sols[0];
+        let bestDist = Math.abs(angleDiff(q1, sols[0].q1)) + Math.abs(angleDiff(q2, sols[0].q2));
+        for (let i = 1; i < sols.length; i++) {
+          const s = sols[i];
+          const d = Math.abs(angleDiff(q1, s.q1)) + Math.abs(angleDiff(q2, s.q2));
+          if (d < bestDist) { bestDist = d; best = s; }
+        }
+        target = best;
+      }
+
+      const T = FIXED_GRAPH_DURATION;
+      const coeffs1 = getQuinticCoeffs(q1, target.q1, T);
+      const coeffs2 = getQuinticCoeffs(q2, target.q2, T);
+
+      chartsReset();
+      pathPoints = [];
+
+      const numSteps = 100;
+      const dt = T / numSteps;
+
+      for (let i = 0; i <= numSteps; i++) {
+        const t = i * dt;
+        const q1t = evalQuintic(coeffs1, t);
+        const q2t = evalQuintic(coeffs2, t);
+
+        chartsPush(t, q1t, q2t);
+
+        const fk = forwardKinematics(q1t, q2t);
+        pathPoints.push({ x: fk.xt, y: fk.yt });
+      }
+
+      q1 = target.q1;
+      q2 = target.q2;
+      drawRobot(q1, q2);
+    }
+
+    /* UI: referencias y eventos */
+    const modal = document.getElementById('modalControl');
+    const btnOpen = document.getElementById('openModalBtn');
+    const btnClose = document.getElementsByClassName('close-btn')[0];
+
+    const sliderX = document.getElementById('sliderX'), inputX = document.getElementById('xd');
+    const sliderY = document.getElementById('sliderY'), inputY = document.getElementById('yd');
+    const dur = document.getElementById('dur'), durNum = document.getElementById('durNum');
+    const moverBtn = document.getElementById('moverBtn'), moverInstantBtn = document.getElementById('moverInstantBtn');
+    const inicialBtn = document.getElementById('inicialBtn'), clearBtn = document.getElementById('clearBtn');
+
+    // Abrir modal
+    btnOpen.addEventListener('click', () => {
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
+    });
+
+    // Cerrar modal con 'x'
+    if (btnClose) {
+      btnClose.addEventListener('click', () => {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+      });
+    }
+
+    // Cerrar modal al hacer clic fuera
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Sincronizar sliders <-> inputs
+    function bind(a, b) {
+      a.addEventListener('input', () => { b.value = a.value; });
+      b.addEventListener('input', () => { a.value = b.value; });
+    }
+    bind(sliderX, inputX); bind(sliderY, inputY); bind(dur, durNum);
+
+    // Botones
+    moverBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      const xd = parseFloat(inputX.value);
+      const yd = parseFloat(inputY.value);
+      const T = parseFloat(dur.value);
+      moveArticularTo(xd, yd, T);
+    });
+
+    moverInstantBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      const xd = parseFloat(inputX.value);
+      const yd = parseFloat(inputY.value);
+      calculateAndMoveInstant(xd, yd);
+    });
+
+    inicialBtn.addEventListener('click', () => {
+        // 1. Establecer los valores Xd, Yd en la interfaz
+        inputX.value = 0.14; sliderX.value = 0.14;
+        inputY.value = 0.14; sliderY.value = 0.14;
+        
+        // 2. Forzar el modo de configuración a 'down' (Codo abajo)
+        document.getElementById('elbowMode').value = 'down';
+        
+        // 3. Ocultar el modal y calcular/mover
+        modal.style.display = 'none';
+        calculateAndMoveInstant(0.14, 0.14);
+        document.getElementById('elbowMode').value = 'auto';
+        
+    });
+
+    clearBtn.addEventListener('click', () => {
+      pathPoints = [];
+      chartsReset();
+      drawRobot(q1, q2);
+      modal.style.display = 'none';
+    });
+
+   /* ===== CÁLCULO INSTANTÁNEO Y MOVIMIENTO (Función Auxiliar) ===== */
+    function calculateTargetIK(xd, yd, current_q1, current_q2, mode) {
+        const sols = inverseKinematicsAll(xd, yd);
+        if (!sols) return null;
+
+        if (mode === 'up') return sols[1];
+        if (mode === 'down') return sols[0];
+        
+        // Auto (el más cercano al q actual)
+        let best = sols[0];
+        let bestDist = Math.abs(angleDiff(current_q1, sols[0].q1)) + Math.abs(angleDiff(current_q2, sols[0].q2));
+        for (let i = 1; i < sols.length; i++) {
+            const s = sols[i];
+            const d = Math.abs(angleDiff(current_q1, s.q1)) + Math.abs(angleDiff(current_q2, s.q2));
+            if (d < bestDist) { bestDist = d; best = s; }
+        }
+        return best;
+    }
+
+    // La función calculateAndMoveInstant (la que genera la trayectoria de 20s) permanece igual.
+
+    /* ===== Inicialización (Modificado) ===== */
+    (function init(){
+        const initialTarget = calculateTargetIK(0.14, 0.14, q1, q2, 'down');
+
+        if (initialTarget) {
+            q1 = initialTarget.q1;
+            q2 = initialTarget.q2;
+        }
+        pathPoints = [];
+        chartsReset();
+        drawRobot(q1, q2);
+        
+        document.getElementById('elbowMode').value = 'auto';
+
+        document.getElementById('xd').value = 0.14;
+        document.getElementById('sliderX').value = 0.14;
+        document.getElementById('yd').value = 0.14;
+        document.getElementById('sliderY').value = 0.14;
+    })(); 
+  </script>
 </body>
 </html>
