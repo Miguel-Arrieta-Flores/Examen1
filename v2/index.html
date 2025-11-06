@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Robot Planar de 2 GDL</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOX6AInx8nE0t0eD5Ciic+T5EBLhjrN6IblxG4vCP0/Tf5JzYJdKydXXC3Yf36" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-67OWQmiYxcnXh5P2i6uXFhXWjX4rYyL8Vl3J/uR/D0dYv3V2t6M2Wv5JzYJdKydXXC3Yf36" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-xI3UuOAyYPLW2qgqI6d6fG74YvE4w4/2r8+5K0/13t3eP/n94lX8Gj5n2f2Lg5" crossorigin="anonymous"></script>
+
+<style>
+/* 2. Archivo style.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+    text-align: center;
+}
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 20px;
+}
+main {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+section {
+    margin-bottom: 30px;
+}
+#robotCanvas {
+    /* Dimensiones ajustadas para mejor visibilidad */
+    width: 800px;
+    height: 800px;
+    display: block;
+    margin: 30px auto;
+    border: 2px solid #333;
+    background-color: #fff;
+}
+#diagram-container img {
+    max-width: 90%;
+    height: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 15px 0;
+}
+h2, h3 {
+    color: #004085;
+    margin-top: 25px;
+}
+.input-group {
+    margin: 10px 0;
+    display: inline-block;
+    padding: 0 20px;
+}
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #218838;
+}
+.graph-container {
+    width: 48%;
+    display: inline-block;
+    margin: 1%;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Control de Robot Planar de 2 GDL</h1>
+    <p>Primer Examen Parcial - Robótica</p>
+</header>
+
+<main>
+    <section id="diagram-container">
+        <h2>Esquema de Control del Robot Planar de 2 GDL</h2>
+        <p>Sea el esquema de control del robot planar de 2 GDL estudiado en clase:</p>
+        
+        <img src="control_diagram.png" alt="Diagrama de Bloques del Esquema de Control del Robot Planar 2 GDL">
+        
+        <p>
+            Donde las variables son: 
+            $x_{d}=\begin{bmatrix} x_{d} \\ y_{d} \end{bmatrix}$, 
+            $q_{d}=\begin{bmatrix} q_{1d} \\ q_{2d} \end{bmatrix}$, 
+            $\tilde{q}=\begin{bmatrix} \tilde{q}_{1} \\ \tilde{q}_{2} \end{bmatrix}$, 
+            $\tau=\begin{bmatrix} \tau_{1} \\ \tau_{2} \end{bmatrix}$, 
+            $q=\begin{bmatrix} q_{1} \\ q_{2} \end{bmatrix}$, y 
+            $x=\begin{bmatrix} x \\ y \end{bmatrix}$.
+        </p>
+    </section>
+    
+    <hr>
+    
+    <section id="control-panel">
+        <h2>Panel de Control (TCP: $x_d$, $y_d$)</h2>
+        <div class="input-group">
+            <label for="xd">Posición $X_d$ (cm):</label>
+            <input type="number" id="xd" value="14" step="0.1">
+        </div>
+        <div class="input-group">
+            <label for="yd">Posición $Y_d$ (cm):</label>
+            <input type="number" id="yd" value="14" step="0.1">
+        </div>
+        <button id="move-tcp">Mover TCP Instantáneamente</button>
+        <button id="go-initial-pos">Ir a Posición Inicial ($x_i=y_i=14$ cm)</button>
+    </section>
+
+    <hr>
+
+    <section id="robot-visualization">
+        <h2>Visualización del Robot y Espacio Cartesiano</h2>
+        <canvas id="robotCanvas" width="800" height="800"></canvas>
+        <p id="time-info">Tiempo de trayectoria: $t_i = 0$ s a $t_f = 20$ s</p>
+    </section>
+
+    <hr>
+
+    <section id="trajectory-graphs">
+        <h2>Gráficas de Trayectoria Articular (g)</h2>
+        <div class="graph-container">
+            <h3>Trayectoria $q_{1d}(t)$ (rad)</h3>
+            <canvas id="q1dGraph"></canvas>
+        </div>
+        <div class="graph-container">
+            <h3>Trayectoria $q_{2d}(t)$ (rad)</h3>
+            <canvas id="q2dGraph"></canvas>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>Dimensiones: $l_1 = l_2 = 12$ cm, Pinza: $2$ cm.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

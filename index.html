@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robot Planar 2 GDL - Control Cinemática</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+        <h1>Control de Robot Planar de 2 GDL</h1>
+        <p>Primer Examen Parcial - Robótica</p>
+    </header>
+
+    <main>
+        <section id="control-panel">
+            <h2>Panel de Control (TCP: xd, yd)</h2>
+            <div class="input-group">
+                <label for="xd">Posición Xd (cm):</label>
+                <input type="number" id="xd" value="14" step="0.1" />
+            </div>
+            <div class="input-group">
+                <label for="yd">Posición Yd (cm):</label>
+                <input type="number" id="yd" value="14" step="0.1" />
+            </div>
+            <button id="move-tcp">Mover TCP Instantáneamente</button>
+            <button id="go-initial-pos">Ir a Posición Inicial (xi=yi=14 cm)</button>
+        </section>
+
+        <hr>
+
+        <section id="robot-visualization">
+            <h2>Visualización del Robot y Espacio Cartesiano</h2>
+            <canvas id="robotCanvas" width="800" height="800"></canvas>
+            <p id="time-info">Tiempo de trayectoria: ti = 0 s a tf = 20 s</p>
+        </section>
+
+        <hr>
+
+        <section id="trajectory-graphs">
+            <h2>Gráficas de Trayectoria Articular</h2>
+            <div class="graph-container">
+                <h3>Trayectoria q1d(t) (rad)</h3>
+                <canvas id="q1dGraph" width="600" height="200"></canvas>
+            </div>
+            <div class="graph-container">
+                <h3>Trayectoria q2d(t) (rad)</h3>
+                <canvas id="q2dGraph" width="600" height="200"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Dimensiones: l1 = l2 = 12 cm, Pinza = 2 cm</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
