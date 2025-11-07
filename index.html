@@ -441,15 +441,111 @@
 
     /* Charts */
     const q1Chart = new Chart(document.getElementById('chartQ1'), {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: 'q₁ (°)', data: [], borderColor: '#3a7bd5', fill: false }]}, // Etiqueta en grados
-      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: '°' } } } } // Eje Y en grados
-    });
-    const q2Chart = new Chart(document.getElementById('chartQ2'), {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: 'q₂ (°)', data: [], borderColor: '#3fa47a', fill: false }]}, // Etiqueta en grados
-      options: { animation: false, scales: { x: { title: { display: true, text: 't (s)' } }, y: { title: { display: true, text: '°' } } } } // Eje Y en grados
-    });
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'q₁ (°)',
+          data: [],
+          borderColor: '#3a7bd5',
+          fill: false
+        }]
+      },
+      options: {
+        animation: false,
+        plugins: {
+          legend: {
+            labels: {
+              font: { size: 16 },
+              color: '#333'
+            }
+          },
+          title: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 't (s)',
+              font: { size: 16 },
+              color: '#333'
+            },
+            ticks: {
+              font: { size: 14 },
+              color: '#444'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'q₁ (°)',
+              font: { size: 16 },
+              color: '#333'
+            },
+            ticks: {
+              font: { size: 14 },
+              color: '#444'
+            }
+          }
+        }
+      }
+    });
+
+    const q2Chart = new Chart(document.getElementById('chartQ2'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'q₂ (°)',
+          data: [],
+          borderColor: '#3fa47a',
+          fill: false
+        }]
+      },
+      options: {
+        animation: false,
+        plugins: {
+          legend: {
+            labels: {
+              font: { size: 16 },
+              color: '#333'
+            }
+          },
+          title: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 't (s)',
+              font: { size: 16 },
+              color: '#333'
+            },
+            ticks: {
+              font: { size: 14 },
+              color: '#444'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'q₂ (°)',
+              font: { size: 16 },
+              color: '#333'
+            },
+            ticks: {
+              font: { size: 14 },
+              color: '#444'
+            }
+          }
+        }
+      }
+    });
+
     function chartsReset() {
       q1Chart.data.labels = []; q1Chart.data.datasets[0].data = [];
       q2Chart.data.labels = []; q2Chart.data.datasets[0].data = [];
