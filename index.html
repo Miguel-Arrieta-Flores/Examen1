@@ -31,6 +31,17 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
+    #toggleThemeBtn{
+      background: black;
+      color: var(--primary);
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
     main {
       max-width: 1200px;
       margin: 20px auto;
@@ -185,6 +196,16 @@
     }
     .alerta-contenido button:hover { background: #c9302c; }
 
+    footer{
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 15px 10px;
+      margin-top: 40px;
+      border-top: 3px solid var(--orange);
+      font-size: 14px;
+    }
+
     body.dark {
       --bg: #1c1f26;
       --card: #2a2f3a;
@@ -216,16 +237,7 @@
     <h1>Robot Planar 2 GDL — Movimiento Instantáneo y Trayectorias</h1>
     <p>Simulación con control cinemático instantáneo y gráficas precalculadas (T<sub>f</sub> = 20 s)</p>
   </header>
-  <button id="toggleThemeBtn" style="
-    background: black;
-    color: var(--primary);
-    border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 8px;
-  ">🌙 Modo Oscuro</button>
+  <button id="toggleThemeBtn">🌙 Modo Oscuro</button>
 
   <button id="openModalBtn" class="btn-secondary" aria-haspopup="dialog" aria-controls="modalControl">⚙️ Abrir Panel de Control</button>
 
@@ -295,15 +307,7 @@
     </div>
   </div>
 
-  <footer style="
-    background: var(--primary);
-    color: white;
-    text-align: center;
-    padding: 15px 10px;
-    margin-top: 40px;
-    border-top: 3px solid var(--orange);
-    font-size: 14px;
-  ">
+  <footer>
     © 2025 Simulador Robot Planar 2 GDL — Desarrollado por Miguel Angel Arrieta Flores<br>
     <span style="opacity: 0.8;">ROBOTICA • GRUPO 1010 • EXAMEN 1 • FES ARAGON • SEMESTRE 2026-I</span>
   </footer>
